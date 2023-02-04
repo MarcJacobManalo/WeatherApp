@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">WeatherApp</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="login_fragment_label">Login Fragment</string>
+    <string name="registration_fragment_label">Registration Fragment</string>
+    <string name="weather_fragment_label">Weather Fragment</string>
+
+    <string name="weather_api_key">OPEN_WEATHER_API_KEY</string>
+</resources>
