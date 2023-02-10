@@ -2,8 +2,10 @@ package com.example.weatherapp.weather.presentation.tabs
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.weatherapp.core.domain.usecase.GetLastKnownLocation
+import com.example.weatherapp.core.presentation.BaseLocationViewModel
+import com.example.weatherapp.core.presentation.BaseViewModel
 import com.example.weatherapp.weather.domain.model.Weather
 import com.example.weatherapp.weather.domain.usecase.FetchWeathers
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,18 +17,37 @@ import ph.easethetics.easentralized.easelife.util.SingleLiveEvent
 import javax.inject.Inject
 
 @HiltViewModel
-class WeatherListViewModel @Inject constructor(private val fetchWeathersUseCase: FetchWeathers) :
-    ViewModel() {
+class WeatherListViewModel @Inject constructor(
+    private val getLastKnownLocationUseCase: GetLastKnownLocation,
+    private val fetchWeathersUseCase: FetchWeathers
+) : BaseLocationViewModel(getLastKnownLocationUseCase) {
 
     private val _weathers = MutableLiveData<List<Weather>>()
     val weathers: LiveData<List<Weather>> get() = _weathers
 
     private val _message = SingleLiveEvent<String>()
-    val message: LiveData<String> get() = _message
+    override val message: LiveData<String> get() = _message
 
-    fun fetchWeathers() {
+    fun getLastKnownLocation() {
         viewModelScope.launch {
-            fetchWeathersUseCase.execute().catch { }.collect { weathers ->
+            getLastKnownLocation(
+                onError = { e ->
+                    withContext(Dispatchers.Main) {
+                        _message.value = e.message
+                    }
+                }, onSuccess = { location ->
+                    fetchWeathers(location.latitude, location.longitude)
+                })
+        }
+    }
+
+    private fun fetchWeathers(lat: Double, lon: Double) {
+        viewModelScope.launch {
+            fetchWeathersUseCase.execute(lat = lat, lon = lon).catch { e ->
+                withContext(Dispatchers.Main) {
+                    _message.value = e.message
+                }
+            }.collect { weathers ->
                 withContext(Dispatchers.Main) {
                     _weathers.value = weathers ?: listOf()
                 }

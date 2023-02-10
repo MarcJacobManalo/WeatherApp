@@ -2,11 +2,12 @@ package com.example.weatherapp.weather.presentation.tabs
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.core.domain.model.Location
 import com.example.weatherapp.core.domain.usecase.GetLastKnownLocation
 import com.example.weatherapp.core.domain.usecase.IsCurrentTimePassed6pm
+import com.example.weatherapp.core.presentation.BaseLocationViewModel
+import com.example.weatherapp.core.presentation.BaseViewModel
 import com.example.weatherapp.weather.domain.model.WeatherDescription
 import com.example.weatherapp.weather.domain.usecase.FetchCurrentWeather
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,16 +24,13 @@ enum class WeatherIcon {
 
 @HiltViewModel
 class CurrentWeatherViewModel @Inject constructor(
+    private val getLastKnownLocationUseCase: GetLastKnownLocation,
     private val fetchCurrentWeatherUseCase: FetchCurrentWeather,
     private val isCurrentTimePassed6pmUseCase: IsCurrentTimePassed6pm,
-    private val getLastKnownLocationUseCase: GetLastKnownLocation,
-) : ViewModel() {
+) : BaseLocationViewModel(getLastKnownLocationUseCase) {
 
     private val _weatherIcon = MutableLiveData<WeatherIcon>()
     val weatherIcon: LiveData<WeatherIcon> get() = _weatherIcon
-
-    private val _location = MutableLiveData<Location>()
-    val location: LiveData<Location> get() = _location
 
     private val _temperatureInCelsius = MutableLiveData<String>()
     val temperatureInCelsius: LiveData<String> get() = _temperatureInCelsius
@@ -43,21 +41,26 @@ class CurrentWeatherViewModel @Inject constructor(
     private val _sunset = MutableLiveData<String>()
     val sunset: LiveData<String> get() = _sunset
 
+    private val _location = MutableLiveData<Location>()
+    val location: LiveData<Location> get() = _location
+
     private val _message = SingleLiveEvent<String>()
-    val message: LiveData<String> get() = _message
+    override val message: LiveData<String> get() = _message
 
     fun getLastKnownLocation() {
         viewModelScope.launch {
-            getLastKnownLocationUseCase.execute().catch { e ->
-                withContext(Dispatchers.Main) {
-                    _message.value = e.message
+            getLastKnownLocation(
+                onError = { e ->
+                    withContext(Dispatchers.Main) {
+                        _message.value = e.message
+                    }
+                }, onSuccess = { location ->
+                    withContext(Dispatchers.Main) {
+                        _location.value = location
+                    }
+                    fetchCurrentWeather(location.latitude, location.longitude)
                 }
-            }.collect { location ->
-                withContext(Dispatchers.Main) {
-                    _location.value = location
-                }
-                fetchCurrentWeather(location.latitude, location.longitude)
-            }
+            )
         }
     }
 
@@ -69,19 +72,21 @@ class CurrentWeatherViewModel @Inject constructor(
                 }
             }.collect { weather ->
                 weather?.let {
-                    _temperatureInCelsius.value = "${weather.temperature.toString()}°C"
-                    _sunrise.value = "Sunrise: ${weather.getSunriseDateTime()}"
-                    _sunset.value = "Sunset: ${weather.getSunsetDateTime()}"
+                    _temperatureInCelsius.value = it.temperature.toString()
+                    _sunrise.value = it.getSunriseDateTime()
+                    _sunset.value = it.getSunsetDateTime()
                     if (isCurrentTimePassed6pmUseCase.execute()) {
                         withContext(Dispatchers.Main) {
                             _weatherIcon.value = WeatherIcon.MOON
                         }
                     } else {
                         withContext(Dispatchers.Main) {
-                            when (weather.getDescription()) {
+                            when (it.getDescription()) {
                                 WeatherDescription.SUNNY -> _weatherIcon.value = WeatherIcon.SUN
                                 WeatherDescription.RAINY -> _weatherIcon.value = WeatherIcon.RAIN
-                                else -> { /** do nothing **/}
+                                else -> {
+                                    /** do nothing **/
+                                }
                             }
                         }
                     }

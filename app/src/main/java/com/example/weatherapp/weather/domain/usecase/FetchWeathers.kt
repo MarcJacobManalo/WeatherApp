@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class FetchWeathers @Inject constructor (private val repository: WeatherRepository) {
-    suspend fun execute(): Flow<List<Weather>?> {
+    suspend fun execute(lat: Double, lon: Double): Flow<List<Weather>?> {
         return flow {
-            emit(repository.fetchWeathers(lat = 44.34, lon = 10.99))
+            emit(repository.fetchWeathers(lat = lat, lon = lon))
         }.flowOn(Dispatchers.IO)
     }
 }

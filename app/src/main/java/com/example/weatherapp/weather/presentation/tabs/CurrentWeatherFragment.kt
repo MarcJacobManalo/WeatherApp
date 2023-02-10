@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -66,15 +67,15 @@ class CurrentWeatherFragment : Fragment() {
         }
 
         _viewModel.temperatureInCelsius.observe(viewLifecycleOwner) {
-            _binding?.txtTemperature?.text = it
+            _binding?.txtTemperature?.text = "$it°C"
         }
 
         _viewModel.sunrise.observe(viewLifecycleOwner) {
-            _binding?.txtSunrise?.text = it
+            _binding?.txtSunrise?.text = "Sunrise: $it"
         }
 
         _viewModel.sunset.observe(viewLifecycleOwner) {
-            _binding?.txtSunset?.text = it
+            _binding?.txtSunset?.text = "Sunset: $it"
         }
 
         _viewModel.message.observe(viewLifecycleOwner) {
@@ -82,10 +83,12 @@ class CurrentWeatherFragment : Fragment() {
         }
     }
 
-    private fun checkLocationServices(){
-        val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private fun checkLocationServices() {
+        val locationManager =
+            requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        ) {
             requestLocationPermission()
         } else {
             toastMessage("Please enable location services and restart")

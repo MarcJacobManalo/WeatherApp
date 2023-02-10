@@ -40,7 +40,7 @@ class WeatherListFragment : Fragment() {
 
         initObservables()
 
-        _viewModel.fetchWeathers()
+        _viewModel.getLastKnownLocation()
 
         initWeatherForecastsList()
     }

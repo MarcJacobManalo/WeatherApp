@@ -1,8 +1,8 @@
 package com.example.weatherapp.registration.presentation
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.weatherapp.core.presentation.BaseViewModel
 import com.example.weatherapp.registration.domain.usecase.Register
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -14,13 +14,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(private val registerUseCase: Register) :
-    ViewModel() {
+    BaseViewModel() {
 
     private val _isRegistered = SingleLiveEvent<Boolean>()
     val isRegistered: LiveData<Boolean> get() = _isRegistered
 
     private val _message = SingleLiveEvent<String>()
-    val message: LiveData<String> get() = _message
+    override val message: LiveData<String> get() = _message
 
     fun register(name: String, email: String, password: String, confirmPassword: String) {
         viewModelScope.launch {

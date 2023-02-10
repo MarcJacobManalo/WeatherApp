@@ -1,7 +1,7 @@
 package com.example.weatherapp.di
 
 import com.example.weatherapp.core.domain.repository.UserRepository
-import com.example.weatherapp.login.domain.usecase.FetchCurrentUser
+import com.example.weatherapp.login.domain.usecase.IsAuthenticatedUser
 import com.example.weatherapp.login.domain.usecase.Login
 import dagger.Module
 import dagger.Provides
@@ -21,7 +21,7 @@ object LoginModule {
 
     @Singleton
     @Provides
-    fun provideCheckCurrentUser(repository: UserRepository): FetchCurrentUser {
-        return FetchCurrentUser(repository = repository)
+    fun provideCheckCurrentUser(repository: UserRepository): IsAuthenticatedUser {
+        return IsAuthenticatedUser(repository = repository)
     }
 }
